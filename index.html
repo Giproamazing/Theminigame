@@ -2,297 +2,189 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Website</title>
+    <title>Attention Span Game</title>
     <style>
         body {
-            background-color: #1a1a1a; /* Darker grey background */
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-box {
+            width: 300px;
+            height: 300px;
+            border: 3px solid grey;
+            position: relative;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #message {
             color: white;
             text-align: center;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            margin: 20px auto;
-            max-width: 600px;
-        }
-        .input-box, .game, .countdown {
-            background-color: #333; /* Dark grey background */
-            border: 2px solid white; /* White outline */
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-        }
-        .input-box input {
-            width: calc(100% - 20px);
-            padding: 10px;
-            background-color: #2b2b2b; /* Custom darker grey */
-            color: white;
-            border: 2px solid white;
-            border-radius: 5px;
-        }
-        .input-box button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            cursor: pointer;
-            background-color: #444; /* Button with dark grey background */
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        .game {
-            cursor: pointer;
-            border-radius: 10px;
-        }
-        #tic-tac-toe, #attention-game {
-            display: none;
-            position: relative;
-        }
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px auto;
-            max-width: 300px;
-        }
-        .game-board div {
-            background-color: #444;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            cursor: pointer;
-            border: 1px solid #555;
-        }
-        #attention-game {
-            display: none;
-            height: 400px; /* Made larger */
-            width: 400px;
-            margin: 0 auto;
-            background-color: black;
-            position: relative;
-            color: white;
-            font-size: 1.5rem;
-        }
-        #attention-message {
-            font-size: 2rem;
-            padding: 20px;
-        }
-        .close-button {
+            font-size: 24px;
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: red;
+            width: 100%;
+            top: -40px;
+        }
+
+        #timer {
             color: white;
-            border: none;
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            position: absolute;
+            width: 100%;
+            bottom: -40px;
+        }
+
+        #progress-bar {
+            width: 80%;
+            height: 20px;
+            background-color: grey;
+            border: 2px solid white;
+            margin-top: 10px;
+            position: absolute;
+            bottom: 10px;
+            left: 10%;
+            right: 10%;
+        }
+
+        #progress {
+            height: 100%;
+            background-color: green;
+            width: 0;
+        }
+
+        .color-box {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: background-color 0.5s;
         }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <!-- Input Box -->
-        <div class="input-box">
-            <input type="text" id="input-code" placeholder="Enter Code">
-            <button onclick="checkCode()">Submit</button>
-            <p id="code-output"></p>
+    <div id="game-box">
+        <div id="message">CLICK ON GREEN</div>
+        <div id="color-box" class="color-box"></div>
+        <div id="timer">Time: 0s</div>
+        <div id="progress-bar">
+            <div id="progress"></div>
         </div>
-
-        <!-- Game 1: Tic Tac Toe -->
-        <div class="game" id="tic-tac-toe-game" onclick="startTicTacToe()">Click to play Tic Tac Toe</div>
-        <div id="tic-tac-toe">
-            <button class="close-button" onclick="exitGame('tic-tac-toe')">X</button>
-            <div class="game-board" id="board"></div>
-            <p id="tic-tac-toe-message"></p>
-        </div>
-
-        <!-- Game 2: Attention Span Game -->
-        <div class="game" id="attention-span-game" onclick="startAttentionGame()">Click to play Attention Span Game</div>
-        <div id="attention-game" onclick="blackClickCheck(event)">
-            <button class="close-button" onclick="exitGame('attention-game')">X</button>
-            <p id="attention-message">Wait for blue...</p>
-        </div>
-
-        <!-- Countdown Timer -->
-        <div class="countdown" id="countdown-timer">Countdown to September 6: <span id="countdown"></span></div>
     </div>
-
     <script>
-        // Countdown Timer
-        const countdownElement = document.getElementById('countdown');
-        const countdownDate = new Date('September 6, 2024 00:00:00').getTime();
+        document.addEventListener('DOMContentLoaded', () => {
+            const colorBox = document.getElementById('color-box');
+            const messageElement = document.getElementById('message');
+            const timerElement = document.getElementById('timer');
+            const progressBar = document.getElementById('progress');
+            let progress = 0;
+            const maxClicks = 100;
+            let clicks = 0;
+            let timer = 0;
+            let timerInterval;
+            const colors = [
+                'green', 
+                'yellow', 
+                'purple', 
+                'black', 
+                'blue', 
+                'red', 
+                'orange', 
+                'pink', 
+                'cyan', 
+                'magenta', 
+                '#003300', // Very dark green
+                '#ff69b4'  // Hot pink
+            ];
+            const durations = {
+                green: 500,
+                yellow: 1000,
+                purple: 1000,
+                black: 1000,
+                blue: 1000,
+                red: 1000,
+                orange: 1000,
+                pink: 1000,
+                cyan: 1000,
+                magenta: 1000,
+                '#003300': 1000, // Very dark green
+                '#ff69b4': 1000  // Hot pink
+            };
 
-        setInterval(() => {
-            const now = new Date().getTime();
-            const distance = countdownDate - now;
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-            if (distance < 0) {
-                countdownElement.innerHTML = "EXPIRED";
+            function getRandomColor() {
+                return colors[Math.floor(Math.random() * colors.length)];
             }
-        }, 1000);
 
-        // Check Input Code
-        function checkCode() {
-            const inputCode = document.getElementById('input-code').value.toUpperCase();
-            if (inputCode === 'CELUS MIGHTY') {
-                document.getElementById('code-output').innerText = '30142';
-            } else {
-                document.getElementById('code-output').innerText = 'Incorrect code';
+            function startTimer() {
+                timer = 0;
+                timerElement.textContent = `Time: ${timer}s`;
+                timerInterval = setInterval(() => {
+                    timer++;
+                    timerElement.textContent = `Time: ${timer}s`;
+                }, 1000);
             }
-        }
 
-        // Tic Tac Toe Game Logic
-        function startTicTacToe() {
-            document.getElementById('tic-tac-toe').style.display = 'block';
-            document.getElementById('tic-tac-toe-game').style.display = 'none';
-            document.getElementById('attention-span-game').style.display = 'none';
-            const board = document.getElementById('board');
-            board.innerHTML = '';
-            let currentPlayer = 'X';
-            let gameBoard = Array(9).fill(null);
-
-            const checkWin = (board, player) => {
-                const winPatterns = [
-                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-                    [0, 4, 8], [2, 4, 6]  // diagonals
-                ];
-                return winPatterns.some(pattern => pattern.every(index => board[index] === player));
-            };
-
-            const aiMove = () => {
-                // AI predicts player's next move
-                for (let i = 0; i < gameBoard.length; i++) {
-                    if (gameBoard[i] === null) {
-                        gameBoard[i] = 'O';
-                        if (checkWin(gameBoard, 'O')) {
-                            renderBoard();
-                            return;
-                        }
-                        gameBoard[i] = null;
-                    }
-                }
-                // If no winning move, block player's move
-                for (let i = 0; i < gameBoard.length; i++) {
-                    if (gameBoard[i] === null) {
-                        gameBoard[i] = 'X';
-                        if (checkWin(gameBoard, 'X')) {
-                            gameBoard[i] = 'O';
-                            renderBoard();
-                            return;
-                        }
-                        gameBoard[i] = null;
-                    }
-                }
-                // Random move if no immediate win or block needed
-                const availableMoves = gameBoard.map((val, idx) => val === null ? idx : null).filter(val => val !== null);
-                const move = availableMoves[Math.floor(Math.random() * availableMoves.length)];
-                gameBoard[move] = 'O';
-                renderBoard();
-            };
-
-            const makeMove = (index) => {
-                if (!gameBoard[index]) {
-                    gameBoard[index] = currentPlayer;
-                    renderBoard();
-                    if (checkWin(gameBoard, currentPlayer)) {
-                        document.getElementById('tic-tac-toe-message').innerText = currentPlayer === 'X' ? 'You win! CELUS' : 'You lose!';
-                        resetGame('tic-tac-toe');
-                    } else {
-                        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                        if (currentPlayer === 'O') {
-                            aiMove();
-                            if (checkWin(gameBoard, 'O')) {
-                                document.getElementById('tic-tac-toe-message').innerText = 'You lose! Restart to try again.';
-                                resetGame('tic-tac-toe');
-                            }
-                        }
-                    }
-                }
-            };
-
-            const renderBoard = () => {
-                board.innerHTML = '';
-                gameBoard.forEach((value, index) => {
-                    const cell = document.createElement('div');
-                    cell.innerText = value || '';
-                    cell.addEventListener('click', () => makeMove(index));
-                    board.appendChild(cell);
-                });
-            };
-
-            renderBoard();
-        }
-
-        function resetGame(gameId) {
-            setTimeout(() => {
-                document.getElementById(gameId).style.display = 'none';
-                document.getElementById(gameId + '-game').style.display = 'block';
-                if (gameId === 'tic-tac-toe') {
-                    document.getElementById('attention-span-game').style.display = 'block';
-                }
-            }, 2000);
-        }
-
-        function exitGame(gameId) {
-            document.getElementById(gameId).style.display = 'none';
-            document.getElementById(gameId + '-game').style.display = 'block';
-        }
-
-        // Attention Span Game Logic
-        function startAttentionGame() {
-            const ticTacToeMessage = document.getElementById('tic-tac-toe-message').innerText;
-            if (!ticTacToeMessage.includes('CELUS')) {
-                alert('You must beat Tic Tac Toe first!');
-                return;
+            function stopTimer() {
+                clearInterval(timerInterval);
             }
-            document.getElementById('attention-game').style.display = 'block';
-            document.getElementById('attention-span-game').style.display = 'none';
-            document.getElementById('tic-tac-toe-game').style.display = 'none';
 
-            let gameActive = true;
-
-            const showBlue = () => {
-                if (!gameActive) return;
-                const attentionGame = document.getElementById('attention-game');
-                attentionGame.style.backgroundColor = 'blue';
-                document.getElementById('attention-message').innerText = 'CLICK!';
+            function showColor() {
+                const color = getRandomColor();
+                colorBox.style.backgroundColor = color;
                 setTimeout(() => {
-                    if (attentionGame.style.backgroundColor === 'blue') {
-                        gameActive = false;
-                        resetGame('attention-game');
+                    colorBox.style.backgroundColor = 'black';
+                    setTimeout(showColor, 1500); // 1.5 second interval between color changes
+                }, durations[color]);
+            }
+
+            function updateProgress() {
+                const progressPercentage = (clicks / maxClicks) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+                if (clicks >= maxClicks) {
+                    messageElement.textContent = 'CONGRATULATIONS! CODE: 7390';
+                    setTimeout(() => location.reload(), 3000); // Reload the page to reset the game
+                }
+            }
+
+            function resetGame() {
+                clicks = 0;
+                progressBar.style.width = '0%';
+                timer = 0;
+                timerElement.textContent = `Time: ${timer}s`;
+                stopTimer();
+                if (clicks >= maxClicks) {
+                    messageElement.textContent = '7390';
+                    setTimeout(() => messageElement.textContent = 'CLICK ON GREEN', 3000); // Show '7390' for 3 seconds
+                }
+                setTimeout(() => colorBox.addEventListener('click', onBoxClick), 100); // Re-add click event listener
+            }
+
+            function onBoxClick(e) {
+                const clickedColor = e.target.style.backgroundColor;
+                if (clickedColor === 'green' || clickedColor === 'rgb(0, 51, 0)') { // Handle very dark green
+                    if (clicks === 0) {
+                        startTimer(); // Start timer on first green click
                     }
-                }, 200);
-            };
-
-            setTimeout(() => {
-                if (gameActive) {
-                    document.getElementById('attention-game').style.backgroundColor = 'black';
-                    document.getElementById('attention-message').innerText = 'Wait for blue...';
-                    setTimeout(showBlue, Math.random() * 2000 + 1000); // Random delay between 1-3 seconds
+                    clicks++;
+                    updateProgress(); // Update the progress bar
+                } else {
+                    resetGame();
                 }
-            }, 200);
+            }
 
-            document.getElementById('attention-game').onclick = (e) => {
-                if (e.target.id === 'attention-game' && gameActive) {
-                    gameActive = false;
-                    document.getElementById('attention-message').innerText = "Don't click on black!";
-                    setTimeout(() => resetGame('attention-game'), 2000);
-                }
-            };
-        }
+            colorBox.addEventListener('click', onBoxClick);
+            showColor();
+        });
     </script>
-
 </body>
-  </html>
+</html>
